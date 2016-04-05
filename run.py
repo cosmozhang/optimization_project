@@ -7,14 +7,15 @@ import matplotlib.pyplot as pl
 
 def plot_func(epls, trls, tels):
     pl.figure(1)
-    pl.plot(epls, trls, color="green", marker='o', ls="--", ms=3)
-    pl.plot(epls, tels, color="red", marker='s', ls="-*", ms=3)
+    train_line, = pl.plot(epls, trls, color="green", marker='.', ls="--", ms=3)
+    test_line, = pl.plot(epls, tels, color="red", marker='.', ls="--", ms=3)
 
     pl.xlim(0.0, epls[-1]+1.0)
-    pl.ylim(0.0, 1.1)
+    pl.ylim(min([min(trls), min(tels)])-0.05, max([max(trls), max(tels)])+0.05)
     pl.xlabel("Epoch")
     pl.ylabel("Error Rate")
     pl.title("learning curve")
+    pl.legend([train_line, test_line], ['Training', 'Testing'])
     filename="convergence"+".png"
     pl.savefig(filename, format='png')
     print "plotting ok"
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     num_samples = Xtrain.shape[0]
 
     classifier = LRclassifier(lr, lmbd, num_feats, num_samples)
-    epoches = 100
+    epoches = 1000
 
     train_error_ls, test_error_ls =[], []
 
@@ -55,12 +56,7 @@ if __name__ == "__main__":
 
         print "\n==============Running epoch: %d=================\n" % epoch
 
-        for x, y in zip(Xtrain, Ytrain):
-            classifier.update_gradients(x, y)
-            classifier.l2_update()
-            classifier.update_weights()
-
-        classifier.reset_gradient()
+        classifier.train(Xtrain, Ytrain)
 
         # prediction
         Predtrain = classifier.predict(Xtrain)

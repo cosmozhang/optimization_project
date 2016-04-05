@@ -17,23 +17,25 @@ class LRclassifier(object):
 
     # truncate big numbers
     def exp(self, x):
-        if x > 45:
-            return math.exp(45)
+        if x > 100:
+            return math.exp(100)
         else:
             return math.exp(x)
 
     def logistic_function(self, t):
-        return 1.0 / (1 + self.exp(-1.0 * t))
+        return 1.0 / (1 + math.exp(t))
 
-    def update_gradients(self, x, y):
-        # compute gradient
-        t = np.dot(x, self.weights)
-        gradient =  -1.0 * self.logistic_function(-1.0 * y * t) * y * x
-        # take a step down
-        self.gradients -= self.step_size * gradient
+    def update_gradients(self, Xtrain, Ytrain):
+        for x, y in zip(Xtrain, Ytrain):
+            # compute gradient
+            gradient =  self.logistic_function(y * np.dot(x, self.weights)) * (-1.0 * y) * x
+            # take a step down
+            self.gradients -= self.step_size * gradient
 
     def l2_update(self):
         # regularization
+        # print "weights:", np.linalg.norm(self.weights)
+        # print "gradients", np.linalg.norm(self.gradients)
         self.gradients += self.lmbd * self.weights
 
     def update_weights(self):
@@ -58,10 +60,15 @@ class LRclassifier(object):
     def predict(self, samples):
         ret = []
         for x in samples:
-            t = np.dot(x, self.weights)
-            prob_p = self.logistic_function(t)
+            prob_p = self.logistic_function(-np.dot(x, self.weights))
             if prob_p > .5:
                 ret.append(1)
             else:
                 ret.append(-1)
         return np.asarray(ret)
+
+    def train(self, X, Y):
+        self.update_gradients(X, Y)
+        self.l2_update()
+        self.update_weights()
+        self.reset_gradient()
