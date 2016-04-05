@@ -3,12 +3,17 @@ import math
 
 ''' Gradient Descent for the primal version of logistic regression '''
 
-class GradientDescent:
+class LRclassifier(object):
 
-    def __init__(self, n_iter, step_size, lmbd):
-        self.n_iter = n_iter
+    def __init__(self, step_size, lmbd, num_feats, num_samples):
         self.step_size = step_size
         self.lmbd = lmbd
+        self.num_feats = num_feats
+        self.num_samples = num_samples
+
+        # initialize weights: w <- 0
+        self.weights = np.zeros(self.num_feats)
+        self.gradients = np.zeros(self.num_feats)
 
     # truncate big numbers
     def exp(self, x):
@@ -46,22 +51,9 @@ class GradientDescent:
             neg_log_likelihood -= math.log(1 + self.exp(-1.0 * y * t))
         return neg_log_likelihood
 
-    def fit(self, samples, labels):
-        self.num_feats = samples.shape[1]
-        self.num_samples = samples.shape[0]
+    def reset_gradient(self):
+        self.gradients = np.zeros(self.num_feats)
 
-        # initialize weights: w <- 0
-        self.weights = np.zeros(self.num_feats)
-
-        for n in xrange(self.n_iter):
-            self.gradients = np.zeros(self.num_feats)
-
-            for x, y in zip(samples, labels):
-                self.update_gradients(x, y)
-
-            self.l2_update()
-            self.update_weights()
-            #print "Iter:", n, "objective function:", self.objective_function(samples, labels)
 
     def predict(self, samples):
         ret = []
