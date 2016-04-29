@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 from gradient_descent import LRclassifier
+from dual_coordinate_descent import DualLRclassifier
 from sklearn import metrics
 import matplotlib.pyplot as pl
 
@@ -35,31 +36,20 @@ def read_data(filename):
     return (np.asarray(Xset), np.asarray(Yset))
 
 
-if __name__ == "__main__":
-
-
-    Xtrain, Ytrain = read_data("./data/a9a.train")
-    Xtest, Ytest = read_data("./data/a9a.test")
-
-    lr = 0.25
-    lmbd = 1
+def primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoches=100):
     num_feats = Xtrain.shape[1]
     num_samples = Xtrain.shape[0]
-
     classifier = LRclassifier(lr, lmbd, num_feats, num_samples)
-    epoches = 100
-
     train_error_ls, test_error_ls =[], []
 
     for epoch in xrange(1, epoches+1):
-
         print "\n==============Running epoch: %d=================\n" % epoch
 
         for x, y in zip(Xtrain, Ytrain):
             classifier.update_gradients(x, y)
             classifier.l2_update()
-            classifier.update_weights()
 
+        classifier.update_weights()
         classifier.reset_gradient()
 
         # prediction
@@ -76,7 +66,49 @@ if __name__ == "__main__":
     plot_func(range(1, epoches+1), train_error_ls, test_error_ls)
 
 
+def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
+    num_feats = Xtrain.shape[1]
+    num_samples = Xtrain.shape[0]
+    classifier = DualLRclassifier(1, num_feats, num_samples)
+    classifier.init_lambdas()
+    classifier.init_weights(Xtrain, Ytrain)
+    classifier.start(Xtrain)
+    train_error_ls, test_error_ls =[], []
+
+    for epoch in xrange(1, epoches+1):
+        print "\n==============Running epoch: %d=================\n" % epoch
+
+        for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
+            a, b, c1, c2 = classifier.construct_subproblem(x, y, i)
+            Z = classifier.modified_newton(a, b, c1, c2, n_iter=10)
+            classifier.update_rule(x, y, i, Z)
+
+        # prediction
+        Predtrain = classifier.predict(Xtrain)
+        error_on_train = 1 - metrics.accuracy_score(Ytrain, Predtrain)
+        train_error_ls.append(error_on_train)
+
+        Predtest = classifier.predict(Xtest)
+        error_on_test = 1 - metrics.accuracy_score(Ytest, Predtest)
+        test_error_ls.append(error_on_test)
+
+        print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
+
+    plot_func(range(1, epoches+1), train_error_ls, test_error_ls)
 
 
+def main():
 
+    Xtrain, Ytrain = read_data("./data/a9a.train")
+    Xtest, Ytest = read_data("./data/a9a.test")
+    problem = 'dual'
+
+    if problem == 'primal':
+        primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoches=100)
+    else:
+        dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100)
+
+
+if __name__ == "__main__":
+    main()
 
