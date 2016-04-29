@@ -4,18 +4,20 @@ from gradient_descent import LRclassifier
 from dual_coordinate_descent import DualLRclassifier
 from sklearn import metrics
 import matplotlib.pyplot as pl
+import sys
 
 
 def plot_func(epls, trls, tels):
     pl.figure(1)
-    pl.plot(epls, trls, color="green", marker='o', ls="--", ms=3)
-    pl.plot(epls, tels, color="red", marker='s', ls="-*", ms=3)
+    train_line, = pl.plot(epls, trls, color="green", marker='.', ls="--", ms=3)
+    test_line, = pl.plot(epls, tels, color="red", marker='.', ls="--", ms=3)
 
     pl.xlim(0.0, epls[-1]+1.0)
-    pl.ylim(0.0, 1.1)
+    pl.ylim(min([min(trls), min(tels)])-0.05, max([max(trls), max(tels)])+0.05)
     pl.xlabel("Epoch")
     pl.ylabel("Error Rate")
     pl.title("learning curve")
+    pl.legend([train_line, test_line], ['Training', 'Testing'])
     filename="convergence"+".png"
     pl.savefig(filename, format='png')
     print "plotting ok"
@@ -45,12 +47,7 @@ def primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoch
     for epoch in xrange(1, epoches+1):
         print "\n==============Running epoch: %d=================\n" % epoch
 
-        for x, y in zip(Xtrain, Ytrain):
-            classifier.update_gradients(x, y)
-            classifier.l2_update()
-
-        classifier.update_weights()
-        classifier.reset_gradient()
+        classifier.train(Xtrain, Ytrain)
 
         # prediction
         Predtrain = classifier.predict(Xtrain)
@@ -70,19 +67,13 @@ def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
     num_feats = Xtrain.shape[1]
     num_samples = Xtrain.shape[0]
     classifier = DualLRclassifier(1, num_feats, num_samples)
-    classifier.init_lambdas()
-    classifier.init_weights(Xtrain, Ytrain)
-    classifier.start(Xtrain)
+    classifier.start(Xtrain, Ytrain)
     train_error_ls, test_error_ls =[], []
 
     for epoch in xrange(1, epoches+1):
         print "\n==============Running epoch: %d=================\n" % epoch
 
-        for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
-            a, b, c1, c2 = classifier.construct_subproblem(x, y, i)
-            Z = classifier.modified_newton(a, b, c1, c2, n_iter=10)
-            classifier.update_rule(x, y, i, Z)
-
+        classifier.train(Xtrain, Ytrain)
         # prediction
         Predtrain = classifier.predict(Xtrain)
         error_on_train = 1 - metrics.accuracy_score(Ytrain, Predtrain)
@@ -101,7 +92,7 @@ def main():
 
     Xtrain, Ytrain = read_data("./data/a9a.train")
     Xtest, Ytest = read_data("./data/a9a.test")
-    problem = 'dual'
+    problem = sys.argv[1]
 
     if problem == 'primal':
         primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoches=100)

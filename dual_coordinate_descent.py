@@ -10,6 +10,7 @@ class DualLRclassifier(object):
         self.num_feats = num_feats
         self.num_samples = num_samples
 
+
     def init_lambdas(self):
         self.lambdas = []
         for i in range(0, self.num_samples):
@@ -22,7 +23,10 @@ class DualLRclassifier(object):
         ret = (X.T * self.lambdas * y).T
         self.weights = np.sum(ret, axis = 0)
 
-    def start(self, X):
+    def start(self, X, y):
+        self.init_lambdas()
+        self.init_weights(X, y)
+
         self.prime_lambdas = self.C - self.lambdas
         self.Q = np.zeros((X.shape[0], X.shape[0]))
         for i in range(X.shape[0]):
@@ -36,9 +40,9 @@ class DualLRclassifier(object):
         return a, b, c1, c2
 
     def g_prime(self, Zt, a, b, ct, s):
-        print "Zt", Zt
-        print "s", s
-        print "s - Zt", s - Zt
+        #print "Zt", Zt
+        #print "s", s
+        #print "s - Zt", s - Zt
         return math.log(Zt/(s - Zt)) + a * (Zt - ct) + b
 
     def g_double_prime(self, Zt, a, b, ct, s):
@@ -72,6 +76,12 @@ class DualLRclassifier(object):
         self.weights += (Z[0] - self.lambdas[i]) * y * x
         self.lambdas[i] = Z[0]
         self.prime_lambdas[i] = Z[1]
+
+    def train(self, Xtrain, Ytrain):
+        for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
+            a, b, c1, c2 = self.construct_subproblem(x, y, i)
+            Z = self.modified_newton(a, b, c1, c2, n_iter=10)
+            self.update_rule(x, y, i, Z)
 
     def predict(self, samples):
         ret = []
