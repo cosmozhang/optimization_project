@@ -14,8 +14,8 @@ class DualLRclassifier(object):
     def init_lambdas(self):
         self.lambdas = []
         for i in range(0, self.num_samples):
-            eps1 = random.uniform(0, 0.025)
-            eps2 = random.uniform(0, 0.025)
+            eps1 = random.uniform(0.001, 0.025)
+            eps2 = random.uniform(0.001, 0.025)
             self.lambdas.append(min(eps1 * self.C, eps2))
         self.lambdas = np.asarray(self.lambdas)
 
@@ -40,9 +40,6 @@ class DualLRclassifier(object):
         return a, b, c1, c2
 
     def g_prime(self, Zt, a, b, ct, s):
-        #print "Zt", Zt
-        #print "s", s
-        #print "s - Zt", s - Zt
         return math.log(Zt/(s - Zt)) + a * (Zt - ct) + b
 
     def g_double_prime(self, Zt, a, b, ct, s):
@@ -50,8 +47,9 @@ class DualLRclassifier(object):
 
     def modified_newton(self, a, b, c1, c2, n_iter=10, eps=0.025):
         c = [c1, c2]
+        bt = [b, -b]
         s = c1 + c2
-        zm = (c1 - c2)/2.0
+        zm = (c2 - c1)/2.0
         if zm >= -b/a:
             t = 0
         else:
@@ -60,7 +58,7 @@ class DualLRclassifier(object):
         for k in range(n_iter):
             if self.g_prime(Z[t], a, b, c[t], s) == 0:
                 break
-            d = - self.g_prime(Z[t], a, b, c[t], s) / self.g_double_prime(Z[t], a, b, c[t], s)
+            d = - self.g_prime(Z[t], a, bt[t], c[t], s) / self.g_double_prime(Z[t], a, bt[t], c[t], s)
             # update Zt
             if Z[t] + d <= 0:
                 Z[t] *= eps
@@ -80,16 +78,27 @@ class DualLRclassifier(object):
     def train(self, Xtrain, Ytrain):
         for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
             a, b, c1, c2 = self.construct_subproblem(x, y, i)
-            Z = self.modified_newton(a, b, c1, c2, n_iter=10)
+            Z = self.modified_newton(a, b, c1, c2, n_iter=100)
             self.update_rule(x, y, i, Z)
 
+    # truncate big numbers
+    def exp(self, x):
+        if x > 100:
+            return math.exp(100)
+        else:
+            return math.exp(x)
+
+    def logistic_function(self, t):
+        return 1.0 / (1 + math.exp(t))
+
     def predict(self, samples):
+        # backwards cause it is the dual and we need to maximize
         ret = []
         for x in samples:
             t = np.dot(x, self.weights)
             prob_p = self.logistic_function(t)
             if prob_p > .5:
-                ret.append(1)
-            else:
                 ret.append(-1)
+            else:
+                ret.append(1)
         return np.asarray(ret)
