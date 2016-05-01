@@ -7,7 +7,7 @@ import matplotlib.pyplot as pl
 import sys
 
 
-def plot_func(epls, trls, tels):
+def plot_func(epls, trls, tels, model):
     pl.figure(1)
     train_line, = pl.plot(epls, trls, color="green", marker='.', ls="--", ms=3)
     test_line, = pl.plot(epls, tels, color="red", marker='.', ls="--", ms=3)
@@ -18,7 +18,7 @@ def plot_func(epls, trls, tels):
     pl.ylabel("Error Rate")
     pl.title("learning curve")
     pl.legend([train_line, test_line], ['Training', 'Testing'])
-    filename="convergence"+".png"
+    filename="convergence_"+model+".png"
     pl.savefig(filename, format='png')
     print "plotting ok"
 
@@ -60,7 +60,7 @@ def primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoch
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
-    plot_func(range(1, epoches+1), train_error_ls, test_error_ls)
+    plot_func(range(1, epoches+1), train_error_ls, test_error_ls, "primal")
 
 
 def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
@@ -85,7 +85,7 @@ def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
-    plot_func(range(1, epoches+1), train_error_ls, test_error_ls)
+    plot_func(range(1, epoches+1), train_error_ls, test_error_ls, "dual")
 
 
 def main():
