@@ -102,7 +102,6 @@ class DualLRclassifier(object):
             self.gradient =  self.logistic_function(y * np.dot(x, self.weights)) * (-1.0 * y) * x
             # print self.gradient
             self.accumulated_gradients -= self.gradient
-            # print LA.norm(self.accumulated_gradients, 2)
 
 
     def predict(self, samples):
