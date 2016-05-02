@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import math
+from numpy import linalg as LA
 
 class DualLRclassifier(object):
 
@@ -9,6 +10,8 @@ class DualLRclassifier(object):
         self.C = C
         self.num_feats = num_feats
         self.num_samples = num_samples
+        self.gradient = np.zeros(self.num_feats)
+        self.accumulated_gradients = np.zeros(self.num_feats)
 
 
     def init_lambdas(self):
@@ -46,6 +49,7 @@ class DualLRclassifier(object):
         return a + s / (Zt * (s - Zt))
 
     def modified_newton(self, a, b, c1, c2, n_iter=10, eps=0.025):
+        # Algorithm 4
         c = [c1, c2]
         bt = [b, -b]
         s = c1 + c2
@@ -75,12 +79,6 @@ class DualLRclassifier(object):
         self.lambdas[i] = Z[0]
         self.prime_lambdas[i] = Z[1]
 
-    def train(self, Xtrain, Ytrain):
-        for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
-            a, b, c1, c2 = self.construct_subproblem(x, y, i)
-            Z = self.modified_newton(a, b, c1, c2, n_iter=100)
-            self.update_rule(x, y, i, Z)
-
     # truncate big numbers
     def exp(self, x):
         if x > 100:
@@ -89,7 +87,23 @@ class DualLRclassifier(object):
             return math.exp(x)
 
     def logistic_function(self, t):
-        return 1.0 / (1 + math.exp(t))
+        return 1.0 / (1 + self.exp(t))
+
+    def reset_accum_gradient(self):
+        self.accumulated_gradients = np.zeros(self.num_feats)
+
+    def train(self, Xtrain, Ytrain):
+        self.reset_accum_gradient()
+        for i, (x, y) in enumerate(zip(Xtrain, Ytrain)):
+            a, b, c1, c2 = self.construct_subproblem(x, y, i)
+            Z = self.modified_newton(a, b, c1, c2, n_iter=100)
+            self.update_rule(x, y, i, Z)
+            # compute gradient
+            self.gradient =  self.logistic_function(y * np.dot(x, self.weights)) * (-1.0 * y) * x
+            # print self.gradient
+            self.accumulated_gradients -= self.gradient
+            # print LA.norm(self.accumulated_gradients, 2)
+
 
     def predict(self, samples):
         # backwards cause it is the dual and we need to maximize
