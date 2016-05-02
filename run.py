@@ -7,7 +7,12 @@ import matplotlib.pyplot as pl
 import sys
 from numpy import linalg as LA
 
+<<<<<<< HEAD
 def plot_error(epls, cdls, gdls):
+=======
+
+def plot_func(epls, trls, tels, model):
+>>>>>>> b9ae90417eb3f604d98ba2e232b0e9b9eeb8f74c
     pl.figure(1)
     cd_line, = pl.plot(epls, cdls, color="green", marker='.', ls="--", ms=3)
     gd_line, = pl.plot(epls, gdls, color="red", marker='.', ls="--", ms=3)
@@ -28,12 +33,21 @@ def plot_gra_norm(epls, cdls, gdls):
     gd_line, = pl.plot(epls, gdls, color="red", marker='.', ls="--", ms=3)
 
     pl.xlim(0.0, epls[-1]+1.0)
+<<<<<<< HEAD
     pl.ylim(min([min(cdls), min(gdls)])-0.05, max([max(cdls), max(gdls)])+0.05)
     pl.xlabel(r"Epoch")
     pl.ylabel(r"$||\nabla P(w)||$")
     pl.title(r"Gradient Norm")
     pl.legend([cd_line, gd_line], ['Coordinate Descent', 'Gradient Descent'])
     filename="grad_norm"+".png"
+=======
+    pl.ylim(min([min(trls), min(tels)])-0.05, max([max(trls), max(tels)])+0.05)
+    pl.xlabel("Epoch")
+    pl.ylabel("Error Rate")
+    pl.title("learning curve")
+    pl.legend([train_line, test_line], ['Training', 'Testing'])
+    filename="convergence_"+model+".png"
+>>>>>>> b9ae90417eb3f604d98ba2e232b0e9b9eeb8f74c
     pl.savefig(filename, format='png')
     print "gnorm plotting ok"
 
@@ -76,8 +90,12 @@ def primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoch
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
+<<<<<<< HEAD
     #plot_error(range(1, epoches+1), train_error_ls, test_error_ls)
     return (grad_norm_ls, test_error_ls)
+=======
+    plot_func(range(1, epoches+1), train_error_ls, test_error_ls, "primal")
+>>>>>>> b9ae90417eb3f604d98ba2e232b0e9b9eeb8f74c
 
 
 def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
@@ -104,8 +122,12 @@ def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
+<<<<<<< HEAD
     #plot_error(range(1, epoches+1), train_error_ls, test_error_ls)
     return (grad_norm_ls, test_error_ls)
+=======
+    plot_func(range(1, epoches+1), train_error_ls, test_error_ls, "dual")
+>>>>>>> b9ae90417eb3f604d98ba2e232b0e9b9eeb8f74c
 
 
 def main():
