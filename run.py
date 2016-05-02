@@ -14,7 +14,7 @@ def plot_error(epls, cdls, gdls):
     gd_line, = pl.plot(epls, gdls, color="red", marker='.', ls="--", ms=3)
 
     pl.xlim(0.0, epls[-1]+1.0)
-    pl.ylim(min([min(cdls), min(gdls)])-0.05, max([max(cdls), max(gdls)])+0.05)
+    pl.ylim(min([min(cdls), min(gdls)])-0.5, max([max(cdls), max(gdls)])+0.5)
     pl.xlabel(r"Epoch")
     pl.ylabel(r"Error Rate")
     pl.title(r"Test Error")
@@ -29,7 +29,7 @@ def plot_gra_norm(epls, cdls, gdls):
     gd_line, = pl.plot(epls, gdls, color="red", marker='.', ls="--", ms=3)
 
     pl.xlim(0.0, epls[-1]+1.0)
-    pl.ylim(min([min(cdls), min(gdls)])-0.05, max([max(cdls), max(gdls)])+0.05)
+    pl.ylim(min([min(cdls), min(gdls)])-0.5, max([max(cdls), max(gdls)])+0.5)
     pl.xlabel(r"Epoch")
     pl.ylabel(r"$||\nabla P(w)||$")
     pl.title(r"Gradient Norm")
@@ -75,7 +75,7 @@ def primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoch
         error_on_test = 1 - metrics.accuracy_score(Ytest, Predtest)
         test_error_ls.append(error_on_test)
         # print LA.norm(classifier.accumulated_gradients, 2)
-        grad_norm_ls.append(LA.norm(classifier.accumulated_gradients, 2))
+        grad_norm_ls.append(np.log(LA.norm(classifier.accumulated_gradients, 2)))
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
@@ -105,7 +105,7 @@ def dual_coordinate_descent(Xtrain, Ytrain, Xtest, Ytest, epoches=100):
         error_on_test = 1 - metrics.accuracy_score(Ytest, Predtest)
         test_error_ls.append(error_on_test)
         # print LA.norm(classifier.accumulated_gradients, 2)
-        grad_norm_ls.append(LA.norm(classifier.accumulated_gradients, 2))
+        grad_norm_ls.append(np.log(LA.norm(classifier.accumulated_gradients, 2)))
 
         print "\nError on train: %0.4f, Error on test: %0.4f\n" %(error_on_train, error_on_test)
 
@@ -118,7 +118,7 @@ def main():
     Xtrain, Ytrain = read_data("./data/a9a.train")
     Xtest, Ytest = read_data("./data/a9a.test")
     # problem = sys.argv[1]
-    EPOCHES = 3
+    EPOCHES = 100
 
     #if problem == 'primal':
     gd_norm_ls, gd_error_ls = primal_gradient_descent(Xtrain, Ytrain, Xtest, Ytest, lr=0.25, lmbd=1, epoches=EPOCHES)
